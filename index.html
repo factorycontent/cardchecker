@@ -8,10 +8,21 @@
 </head>
 <body>
     <h1>Просмотр карточек</h1>
+
+    <div class="instruction-box">
+        <h2>Как использовать интерфейс:</h2>
+        <ol>
+            <li>Выберите источник данных: фид или папка.</li>
+            <li>Для фида: выберите формат (XML или CSV) и укажите теги / столбцы для ID и изображений.</li>
+            <li>Нажмите "Выберите файл" и загрузите ваш фид.</li>
+            <li>Если обложки хранятся в папках на компьютере, то перейдите на вкладку "Загрузка из папки".</li>
+            <li>Нажмите "Выберите файл" и загрузите папку, в которой хранятся артикулы с обложками.</li>
+        </ol>
+    </div>
     <div class="input-container">
         <div class="tabs">
-            <button class="tab-button active" data-tab="feed">Load from Feed</button>
-            <button class="tab-button" data-tab="folder">Load from Folder</button>
+            <button class="tab-button active" data-tab="feed">Загрузка из фида</button>
+            <button class="tab-button" data-tab="folder">Загрузка из папки</button>
         </div>
         
         <div id="feed-input" class="tab-content active">
@@ -38,14 +49,14 @@
     <div id="thumbnails-container">
         <!-- Здесь будут отображаться миниатюры -->
     </div>
-    <button id="get-defective" class="action-button">Bad</button>
+    <button id="get-defective" class="action-button">Отметить как неудачные</button>
 
     <div id="overlay"></div>
     <div id="popup">
         <textarea id="defective-ids" readonly></textarea>
-        <button id="copy-ids">Copy</button>
-        <button id="download-txt">Download as TXT</button>
-        <button id="close-popup">Close</button>
+        <button id="copy-ids">Скопировать ID</button>
+        <button id="download-txt">Скачать как TXT</button>
+        <button id="close-popup">Закрыть</button>
     </div>
 
     <script src="script.js"></script>
