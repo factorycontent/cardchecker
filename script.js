@@ -73,13 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
   feedPicker.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
-    const feedFormat = document.querySelector('input[name="feed-format"]:checked').value;
+  
+    const feedFormat = document.querySelector('.format-button.active').getAttribute('data-format');
     const reader = new FileReader();
-
+  
     reader.onload = (e) => {
       const content = e.target.result;
-
+  
       if (feedFormat === 'xml') {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(content, "text/xml");
@@ -87,67 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (feedFormat === 'csv') {
         covers = parseCSVFeed(content, csvIdColumn.value, csvImageColumn.value);
       }
-
+  
       displayThumbnails(covers);
     };
-
+  
     reader.onerror = (e) => {
       console.error('Ошибка чтения файла:', e);
     };
-
+  
     reader.readAsText(file);
-  });  
-
-  feedPicker.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const feedFormat = document.querySelector('input[name="feed-format"]:checked').value;
-    if (feedFormat === 'xml') {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const xmlString = e.target.result;
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlString, "text/xml"); // Изменено с "application/xml"
-        const idTag = idTagInput.value;
-        const imageTag = imageTagInput.value;
-        covers = parseXMLFeed(xmlDoc, idTag, imageTag);
-        displayThumbnails(covers);
-      };
-      reader.readAsText(file);
-    } else if (feedFormat === 'csv') {
-      // ... (код для CSV остается без изменений)
-    }
-  });
-
-  document.getElementById('get-defective').addEventListener('click', () => {
-      const defectiveIds = covers.filter(cover => cover.isDefective).map(cover => cover.id);
-      document.getElementById('defective-ids').value = defectiveIds.join('\n');
-      document.getElementById('overlay').style.display = 'block';
-      document.getElementById('popup').style.display = 'block';
-  });
-
-  document.getElementById('copy-ids').addEventListener('click', () => {
-      const textarea = document.getElementById('defective-ids');
-      textarea.select();
-      document.execCommand('copy');
-  });
-
-  document.getElementById('download-txt').addEventListener('click', () => {
-      const text = document.getElementById('defective-ids').value;
-      const blob = new Blob([text], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'defective_ids.txt';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-  });
-
-  document.getElementById('close-popup').addEventListener('click', () => {
-      document.getElementById('overlay').style.display = 'none';
-      document.getElementById('popup').style.display = 'none';
   });
 
   function parseXMLFeed(xmlDoc, idTag, imageTag) {
@@ -155,15 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const offers = xmlDoc.getElementsByTagName('offer');
     console.log(`Найдено предложений: ${offers.length}`);
     for (let offer of offers) {
-        const id = offer.getAttribute('id');
-        const title = offer.getElementsByTagName('name')[0]?.textContent || '';
-        const src = offer.getElementsByTagName(imageTag)[0]?.textContent || '';
-        if (id && src) {
-            covers.push({ id, title, src, isDefective: false });
-            console.log(`Добавлено предложение: ID=${id}, Title=${title}, Src=${src}`);
-        } else {
-            console.warn(`Пропущено предложение: ID=${id}, Title=${title}, Src=${src}`);
-        }
+      const id = offer.getAttribute('id');
+      const title = offer.getElementsByTagName('name')[0]?.textContent || '';
+      const src = offer.getElementsByTagName(imageTag)[0]?.textContent || '';
+      if (id && src) {
+        covers.push({ id, title, src, isDefective: false });
+        console.log(`Добавлено предложение: ID=${id}, Title=${title}, Src=${src}`);
+      } else {
+        console.warn(`Пропущено предложение: ID=${id}, Title=${title}, Src=${src}`);
+      }
     }
     console.log(`Всего обработано предложений: ${covers.length}`);
     return covers;
@@ -201,6 +149,36 @@ document.addEventListener('DOMContentLoaded', () => {
     return covers;
   }
 
+  document.getElementById('get-defective').addEventListener('click', () => {
+      const defectiveIds = covers.filter(cover => cover.isDefective).map(cover => cover.id);
+      document.getElementById('defective-ids').value = defectiveIds.join('\n');
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('popup').style.display = 'block';
+  });
+
+  document.getElementById('copy-ids').addEventListener('click', () => {
+      const textarea = document.getElementById('defective-ids');
+      textarea.select();
+      document.execCommand('copy');
+  });
+
+  document.getElementById('download-txt').addEventListener('click', () => {
+      const text = document.getElementById('defective-ids').value;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'defective_ids.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+  });
+
+  document.getElementById('close-popup').addEventListener('click', () => {
+      document.getElementById('overlay').style.display = 'none';
+      document.getElementById('popup').style.display = 'none';
+  });
+
   folderPicker.addEventListener('change', (event) => {
     const files = event.target.files;
     if (files.length === 0) return;
@@ -235,6 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Завершено отображение миниатюр');
   }
 
+  // ... существующий код ...
+
   function createThumbnail(cover) {
     const div = document.createElement('div');
     div.className = 'thumbnail';
@@ -268,18 +248,27 @@ document.addEventListener('DOMContentLoaded', () => {
     div.appendChild(img);
     div.appendChild(label);
 
+    // Обновляем обработчик клика на div
     div.addEventListener('click', (event) => {
         if (event.target !== checkbox) {
             checkbox.checked = !checkbox.checked;
+            updateThumbnailState();
         }
-        cover.isDefective = checkbox.checked;
-        div.classList.toggle('selected');
     });
 
+    // Обновляем обработчик клика на checkbox
     checkbox.addEventListener('click', (event) => {
         event.stopPropagation();
+        updateThumbnailState();
     });
+
+    // Функция для обновления состояния миниатюры
+    function updateThumbnailState() {
+        cover.isDefective = checkbox.checked;
+        div.classList.toggle('selected', checkbox.checked);
+    }
 
     return div;
   }
+
 });
