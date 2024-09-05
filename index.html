@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КонтентФабрика — Просмотр карточек</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Просмотр карточек</h1>
+    <div class="input-container">
+        <div class="tabs">
+            <button class="tab-button active" data-tab="feed">Load from Feed</button>
+            <button class="tab-button" data-tab="folder">Load from Folder</button>
+        </div>
+        
+        <div id="feed-input" class="tab-content active">
+            <div class="feed-format">
+                <button class="format-button active" data-format="xml">XML</button>
+                <button class="format-button" data-format="csv">CSV</button>
+            </div>
+            <input type="file" id="feed-picker" accept=".xml, .csv">
+            <div id="xml-tags" class="format-fields">
+                <input type="text" id="xml-id-tag" placeholder="XML ID Tag (e.g. id)">
+                <input type="text" id="xml-image-tag" placeholder="XML Image Tag (e.g. picture)">
+            </div>
+            <div id="csv-columns" class="format-fields" style="display: none;">
+                <input type="text" id="csv-id-column" placeholder="CSV ID Column (e.g. ID Cruise)">
+                <input type="text" id="csv-image-column" placeholder="CSV Image Column (e.g. Image URL)">
+            </div>
+        </div>
+        
+        <div id="folder-input" class="tab-content">
+            <input type="file" id="folder-picker" webkitdirectory directory multiple>
+        </div>
+    </div>
+
+    <div id="thumbnails-container">
+        <!-- Здесь будут отображаться миниатюры -->
+    </div>
+    <button id="get-defective" class="action-button">Bad</button>
+
+    <div id="overlay"></div>
+    <div id="popup">
+        <textarea id="defective-ids" readonly></textarea>
+        <button id="copy-ids">Copy</button>
+        <button id="download-txt">Download as TXT</button>
+        <button id="close-popup">Close</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
