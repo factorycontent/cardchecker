@@ -100,18 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function parseXMLFeed(xmlDoc, idTag, imageTag) {
     const covers = [];
-    const offers = xmlDoc.getElementsByTagName('offer');
+    const offers = xmlDoc.getElementsByTagName(idTag); // Используем idTag для получения всех предложений
     console.log(`Найдено предложений: ${offers.length}`);
+    
     for (let offer of offers) {
-      const id = offer.getAttribute('id');
-      const title = offer.getElementsByTagName('name')[0]?.textContent || '';
-      const src = offer.getElementsByTagName(imageTag)[0]?.textContent || '';
-      if (id && src) {
-        covers.push({ id, title, src, isDefective: false });
-        console.log(`Добавлено предложение: ID=${id}, Title=${title}, Src=${src}`);
-      } else {
-        console.warn(`Пропущено предложение: ID=${id}, Title=${title}, Src=${src}`);
-      }
+        const id = offer.getAttribute('id');
+        const title = offer.getElementsByTagName('name')[0]?.textContent || '';
+        const src = offer.getElementsByTagName(imageTag)[0]?.textContent || ''; // Получаем первый <picture> тег
+
+        if (id && src) {
+            covers.push({ id, title, src, isDefective: false });
+            console.log(`Добавлено предложение: ID=${id}, Title=${title}, Src=${src}`);
+        } else {
+            console.warn(`Пропущено предложение: ID=${id}, Title=${title}, Src=${src}`);
+        }
     }
     console.log(`Всего обработано предложений: ${covers.length}`);
     return covers;
