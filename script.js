@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const thumbnailsContainer = document.getElementById('thumbnails-container');
+  const aspectRatioSelector = document.getElementById('aspect-ratio');
   const feedPicker = document.getElementById('feed-picker');
   const folderPicker = document.getElementById('folder-picker');
   const dataSourceRadios = document.querySelectorAll('input[name="data-source"]');
@@ -8,6 +9,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const imageTagInput = document.getElementById('image-tag');
 
   let covers = [];
+  let aspectRatio = '1:1'; // Значение по умолчанию
+
+  // Обработчик изменения выбора соотношения сторон
+  aspectRatioSelector.addEventListener('change', () => {
+    aspectRatio = aspectRatioSelector.value;
+    updateThumbnailsAspect(covers); // Обновляем миниатюры, если выбор изменен
+  });
+
+  function updateThumbnailsAspect(covers) {
+    // Обновляем отображение всех миниатюр
+    displayThumbnails(covers);
+  }
 
   dataSourceRadios.forEach(radio => {
       radio.addEventListener('change', () => {
@@ -209,6 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
     thumbnailsContainer.innerHTML = '';
     covers.forEach((cover, index) => {
       const div = createThumbnail(cover);
+      // Добавляем класс в зависимости от выбранного соотношения сторон
+      if (aspectRatio === '1:1') {
+        div.classList.add('aspect-1-1');
+      } else if (aspectRatio === '3:4') {
+        div.classList.add('aspect-3-4');
+      }
       thumbnailsContainer.appendChild(div);
       console.log(`Миниатюра ${index + 1} добавлена:`, cover);
     });
