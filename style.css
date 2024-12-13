@@ -201,6 +201,14 @@ input[type="file"] {
     border-radius: 4px;
 }
 
+.banner-count {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
 #thumbnails-container {
     display: flex;
     flex-wrap: wrap;

@@ -115,13 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const covers = [];
     const offers = xmlDoc.getElementsByTagName(idTag); // Используем idTag для получения всех предложений
     console.log(`Найдено предложений: ${offers.length}`);
-    
+
     for (let offer of offers) {
         const id = offer.getAttribute('id');
         const title = offer.getElementsByTagName('name')[0]?.textContent || '';
         const src = offer.getElementsByTagName(imageTag)[0]?.textContent || ''; // Получаем первый <picture> тег
 
-        if (id && src) {
+        // Проверяем, содержит ли ссылка домен fabrikont.ru
+        if (id && src.includes('fabrikont.ru')) {
             covers.push({ id, title, src, isDefective: false });
             console.log(`Добавлено предложение: ID=${id}, Title=${title}, Src=${src}`);
         } else {
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     console.log(`Всего обработано предложений: ${covers.length}`);
     return covers;
-  }
+}
 
   function parseCSVFeed(csvString, idColumn, imageColumn) {
     const covers = [];
@@ -217,24 +218,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return covers;
   }
 
-  function displayThumbnails(covers) {
-    console.log('Начало отображения миниатюр');
-    thumbnailsContainer.innerHTML = '';
-    covers.forEach((cover, index) => {
-      const div = createThumbnail(cover);
-      // Добавляем класс в зависимости от выбранного соотношения сторон
-      if (aspectRatio === '1:1') {
-        div.classList.add('aspect-1-1');
-      } else if (aspectRatio === '3:4') {
-        div.classList.add('aspect-3-4');
-      }
-      thumbnailsContainer.appendChild(div);
-      console.log(`Миниатюра ${index + 1} добавлена:`, cover);
-    });
-    console.log('Завершено отображение миниатюр');
+  function updateBannerCount(count) {
+    const bannerCountElement = document.getElementById('banner-count');
+    bannerCountElement.textContent = `Загружено баннеров: ${count}`;
   }
 
-  // ... существующий код ...
+  function displayThumbnails(covers) {
+      console.log('Начало отображения миниатюр');
+      thumbnailsContainer.innerHTML = '';
+      covers.forEach((cover, index) => {
+          const div = createThumbnail(cover);
+          // Добавляем класс в зависимости от выбранного соотношения сторон
+          if (aspectRatio === '1:1') {
+              div.classList.add('aspect-1-1');
+          } else if (aspectRatio === '3:4') {
+              div.classList.add('aspect-3-4');
+          }
+          thumbnailsContainer.appendChild(div);
+          console.log(`Миниатюра ${index + 1} добавлена:`, cover);
+      });
+      console.log('Завершено отображение миниатюр');
+      updateBannerCount(covers.length); // Обновляем количество баннеров
+  }
 
   function createThumbnail(cover) {
     const div = document.createElement('div');
