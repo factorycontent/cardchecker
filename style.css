@@ -175,6 +175,11 @@ input[type="file"] {
     height: 360px;
 }
 
+.thumbnail.aspect-16-5 img {
+    width: 480px;
+    height: 150px;
+}
+
 .thumbnail label {
     display: block;
     text-align: center;

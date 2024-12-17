@@ -18,7 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function updateThumbnailsAspect(covers) {
-    // Обновляем отображение всех миниатюр
+    // Обновляем ссылки на изображения из фида в зависимости от выбранного формата
+    covers.forEach(cover => {
+        const pictureNodes = cover.pictureNodes; // Сохраняем pictureNodes при загрузке фида
+        cover.src = getImageLink(pictureNodes, aspectRatio);
+    });
+
+    // Обновляем миниатюры
     displayThumbnails(covers);
   }
 
@@ -111,27 +117,36 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsText(file);
   });
 
+  function getImageLink(pictureNodes, format) {
+    for (let node of pictureNodes) {
+        const src = node.textContent;
+        if (format === '3:4' && src.includes('_34.jpg')) {
+            return src;
+        } else if (format === '16:5' && src.includes('_165.jpg')) {
+            return src;
+        } else if (format === '1:1' && src.includes('fabrikont.ru')) {
+            return src; // Логика по умолчанию для 1:1
+        }
+    }
+    return ''; // Если подходящее изображение не найдено
+  }
+
   function parseXMLFeed(xmlDoc, idTag, imageTag) {
     const covers = [];
-    const offers = xmlDoc.getElementsByTagName(idTag); // Используем idTag для получения всех предложений
-    console.log(`Найдено предложений: ${offers.length}`);
+    const offers = xmlDoc.getElementsByTagName(idTag);
 
     for (let offer of offers) {
         const id = offer.getAttribute('id');
-        const title = offer.getElementsByTagName('name')[0]?.textContent || '';
-        const src = offer.getElementsByTagName(imageTag)[0]?.textContent || ''; // Получаем первый <picture> тег
+        const pictureNodes = offer.getElementsByTagName(imageTag); // Сохраняем все pictureNodes
+        const src = getImageLink(pictureNodes, aspectRatio);
 
-        // Проверяем, содержит ли ссылка домен fabrikont.ru
-        if (id && src.includes('fabrikont.ru')) {
-            covers.push({ id, title, src, isDefective: false });
-            console.log(`Добавлено предложение: ID=${id}, Title=${title}, Src=${src}`);
-        } else {
-            console.warn(`Пропущено предложение: ID=${id}, Title=${title}, Src=${src}`);
+        if (id && src) {
+            covers.push({ id, title: id, src, pictureNodes, isDefective: false });
         }
     }
-    console.log(`Всего обработано предложений: ${covers.length}`);
+
     return covers;
-}
+  }
 
   function parseCSVFeed(csvString, idColumn, imageColumn) {
     const covers = [];
@@ -224,21 +239,52 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayThumbnails(covers) {
-      console.log('Начало отображения миниатюр');
-      thumbnailsContainer.innerHTML = '';
-      covers.forEach((cover, index) => {
-          const div = createThumbnail(cover);
-          // Добавляем класс в зависимости от выбранного соотношения сторон
-          if (aspectRatio === '1:1') {
-              div.classList.add('aspect-1-1');
-          } else if (aspectRatio === '3:4') {
-              div.classList.add('aspect-3-4');
-          }
-          thumbnailsContainer.appendChild(div);
-          console.log(`Миниатюра ${index + 1} добавлена:`, cover);
-      });
-      console.log('Завершено отображение миниатюр');
-      updateBannerCount(covers.length); // Обновляем количество баннеров
+    console.log('Начало отображения миниатюр');
+    thumbnailsContainer.innerHTML = ''; // Полностью очищаем контейнер
+
+    covers.forEach((cover, index) => {
+        const div = document.createElement('div');
+        div.className = 'thumbnail';
+
+        // Добавляем классы для соотношения сторон
+        if (aspectRatio === '1:1') {
+            div.classList.add('aspect-1-1');
+        } else if (aspectRatio === '3:4') {
+            div.classList.add('aspect-3-4');
+        } else if (aspectRatio === '16:5') {
+            div.classList.add('aspect-16-5');
+        }
+
+        // Создаём заново изображение
+        const img = document.createElement('img');
+        img.src = cover.src;
+        img.alt = cover.title;
+
+        // Обработка ошибок загрузки
+        img.onerror = function() {
+            console.error(`Ошибка загрузки изображения: ${cover.src}`);
+            img.src = 'path/to/placeholder-image.jpg'; // Плейсхолдер
+        };
+
+        // Добавляем чекбокс и метку
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = cover.id;
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(` ${cover.title}`));
+
+        // Добавляем элементы в div
+        div.appendChild(img);
+        div.appendChild(label);
+        thumbnailsContainer.appendChild(div);
+
+        console.log(`Миниатюра ${index + 1} добавлена:`, cover);
+    });
+
+    console.log('Завершено отображение миниатюр');
+    updateBannerCount(covers.length);
   }
 
   function createThumbnail(cover) {
