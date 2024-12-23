@@ -313,3 +313,14 @@ input[type="file"] {
     background-color: #fff;
     color: #ff283d;
 }
+
+.update-date {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.sort-label {
+    margin-left: 20px;
+}

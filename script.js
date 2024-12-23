@@ -131,21 +131,83 @@ document.addEventListener('DOMContentLoaded', () => {
     return ''; // Если подходящее изображение не найдено
   }
 
+  function extractTimestamp(url) {
+    let timestamp = null;
+    
+    // Проверяем формат с timestamp в параметре URL
+    const timestampParam = url.match(/timestamp=(\d+)/);
+    if (timestampParam) {
+        timestamp = parseInt(timestampParam[1]);
+    } else {
+        // Проверяем формат с timestamp в пути
+        const timestampInPath = url.match(/\/(\d{13})\//);
+        if (timestampInPath) {
+            timestamp = parseInt(timestampInPath[1]);
+        }
+    }
+    return timestamp;
+  }
+
+  function formatDate(timestamp) {
+    if (!timestamp) return 'Дата не указана';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    
+    // Форматируем дату
+    const dateStr = date.toLocaleDateString('ru-RU');
+    
+    // Добавляем относительное время
+    let relativeTime;
+    if (diffDays === 0) {
+        relativeTime = 'сегодня';
+    } else if (diffDays === 1) {
+        relativeTime = 'вчера';
+    } else {
+        relativeTime = `${diffDays} дн. назад`;
+    }
+    
+    return `${dateStr} (${relativeTime})`;
+  }
+
   function parseXMLFeed(xmlDoc, idTag, imageTag) {
     const covers = [];
     const offers = xmlDoc.getElementsByTagName(idTag);
 
     for (let offer of offers) {
         const id = offer.getAttribute('id');
-        const pictureNodes = offer.getElementsByTagName(imageTag); // Сохраняем все pictureNodes
+        const pictureNodes = offer.getElementsByTagName(imageTag);
         const src = getImageLink(pictureNodes, aspectRatio);
-
+        
         if (id && src) {
-            covers.push({ id, title: id, src, pictureNodes, isDefective: false });
+            const timestamp = extractTimestamp(src);
+            covers.push({ 
+                id, 
+                title: id, 
+                src, 
+                pictureNodes, 
+                isDefective: false,
+                timestamp: timestamp
+            });
         }
     }
 
-    return covers;
+    return sortCovers(covers);
+  }
+
+  function sortCovers(covers) {
+    const sortDirection = document.getElementById('sort-direction').value;
+    
+    return covers.sort((a, b) => {
+        if (!a.timestamp && !b.timestamp) return 0;
+        if (!a.timestamp) return 1;
+        if (!b.timestamp) return -1;
+        
+        return sortDirection === 'desc' 
+            ? b.timestamp - a.timestamp 
+            : a.timestamp - b.timestamp;
+    });
   }
 
   function parseCSVFeed(csvString, idColumn, imageColumn) {
@@ -269,11 +331,16 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.type = 'checkbox';
         checkbox.value = cover.id;
 
+        const dateInfo = document.createElement('div');
+        dateInfo.className = 'update-date';
+        dateInfo.textContent = formatDate(cover.timestamp);
+
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(` ${cover.title}`));
 
         div.appendChild(img);
         div.appendChild(label);
+        div.appendChild(dateInfo);
         thumbnailsContainer.appendChild(div);
 
         // Добавляем обработчик клика на div
@@ -298,4 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBannerCount(covers.length);
   }
 
+  document.getElementById('sort-direction').addEventListener('change', () => {
+    covers = sortCovers(covers);
+    displayThumbnails(covers);
+  });
+
 });
+
