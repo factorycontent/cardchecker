@@ -181,10 +181,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('get-defective').addEventListener('click', () => {
-      const defectiveIds = covers.filter(cover => cover.isDefective).map(cover => cover.id);
-      document.getElementById('defective-ids').value = defectiveIds.join('\n');
-      document.getElementById('overlay').style.display = 'block';
-      document.getElementById('popup').style.display = 'block';
+    const defectiveIds = covers.filter(cover => cover.isDefective).map(cover => cover.id);
+
+    if (defectiveIds.length === 0) {
+        alert('Нет выделенных карточек.');
+        return;
+    }
+
+    document.getElementById('defective-ids').value = defectiveIds.join('\n');
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('popup').style.display = 'block';
   });
 
   document.getElementById('copy-ids').addEventListener('click', () => {
@@ -240,13 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function displayThumbnails(covers) {
     console.log('Начало отображения миниатюр');
-    thumbnailsContainer.innerHTML = ''; // Полностью очищаем контейнер
+    thumbnailsContainer.innerHTML = '';
 
     covers.forEach((cover, index) => {
         const div = document.createElement('div');
         div.className = 'thumbnail';
 
-        // Добавляем классы для соотношения сторон
         if (aspectRatio === '1:1') {
             div.classList.add('aspect-1-1');
         } else if (aspectRatio === '3:4') {
@@ -255,18 +260,10 @@ document.addEventListener('DOMContentLoaded', () => {
             div.classList.add('aspect-16-5');
         }
 
-        // Создаём заново изображение
         const img = document.createElement('img');
         img.src = cover.src;
         img.alt = cover.title;
 
-        // Обработка ошибок загрузки
-        img.onerror = function() {
-            console.error(`Ошибка загрузки изображения: ${cover.src}`);
-            img.src = 'path/to/placeholder-image.jpg'; // Плейсхолдер
-        };
-
-        // Добавляем чекбокс и метку
         const label = document.createElement('label');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -275,72 +272,30 @@ document.addEventListener('DOMContentLoaded', () => {
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(` ${cover.title}`));
 
-        // Добавляем элементы в div
         div.appendChild(img);
         div.appendChild(label);
         thumbnailsContainer.appendChild(div);
+
+        // Добавляем обработчик клика на div
+        div.addEventListener('click', (event) => {
+            if (event.target !== checkbox) { // Игнорируем клик непосредственно по чекбоксу
+                checkbox.checked = !checkbox.checked;
+                cover.isDefective = checkbox.checked;
+                div.classList.toggle('selected', checkbox.checked);
+            }
+        });
+
+        // Обработчик изменения состояния чекбокса
+        checkbox.addEventListener('change', () => {
+            cover.isDefective = checkbox.checked;
+            div.classList.toggle('selected', checkbox.checked);
+        });
 
         console.log(`Миниатюра ${index + 1} добавлена:`, cover);
     });
 
     console.log('Завершено отображение миниатюр');
     updateBannerCount(covers.length);
-  }
-
-  function createThumbnail(cover) {
-    const div = document.createElement('div');
-    div.className = 'thumbnail';
-    
-    const img = document.createElement('img');
-    img.alt = cover.title;
-    
-    // Добавляем обработку ошибок загрузки изображения
-    img.onerror = function() {
-        console.error(`Ошибка загрузки изображения: ${cover.src}`);
-        // Заменяем битое изображение на плейсхолдер
-        img.src = 'path/to/placeholder-image.jpg';
-        div.classList.add('image-load-error');
-    };
-    
-    img.onload = function() {
-        console.log(`Изображение успешно загружено: ${cover.src}`);
-    };
-    
-    // Устанавливаем src после назначения обработчиков событий
-    img.src = cover.src;
-    
-    const label = document.createElement('label');
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = cover.id;
-
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(` ${cover.title}`));
-
-    div.appendChild(img);
-    div.appendChild(label);
-
-    // Обновляем обработчик клика на div
-    div.addEventListener('click', (event) => {
-        if (event.target !== checkbox) {
-            checkbox.checked = !checkbox.checked;
-            updateThumbnailState();
-        }
-    });
-
-    // Обновляем обработчик клика на checkbox
-    checkbox.addEventListener('click', (event) => {
-        event.stopPropagation();
-        updateThumbnailState();
-    });
-
-    // Функция для обновления состояния миниатюры
-    function updateThumbnailState() {
-        cover.isDefective = checkbox.checked;
-        div.classList.toggle('selected', checkbox.checked);
-    }
-
-    return div;
   }
 
 });
