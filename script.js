@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const formatButtons = document.querySelectorAll('.format-button');
   const xmlFields = document.getElementById('xml-tags');
   const csvFields = document.getElementById('csv-columns');
+  const yamlFields = document.getElementById('yaml-fields');
 
   formatButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -64,13 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
           formatButtons.forEach(btn => btn.classList.remove('active'));
           button.classList.add('active');
           
-          if (format === 'xml') {
-              xmlFields.style.display = 'block';
-              csvFields.style.display = 'none';
-          } else {
-              xmlFields.style.display = 'none';
-              csvFields.style.display = 'block';
-          }
+          xmlFields.style.display = format === 'xml' || format === 'yml' ? 'block' : 'none';
+          csvFields.style.display = format === 'csv' ? 'block' : 'none';
       });
   });
 
@@ -99,10 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = (e) => {
       const content = e.target.result;
   
-      if (feedFormat === 'xml') {
+      if (feedFormat === 'xml' || feedFormat === 'yml') {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(content, "text/xml");
-        covers = parseXMLFeed(xmlDoc, xmlIdTag.value, xmlImageTag.value);
+        
+        // Check if it's a YML feed by looking for yml_catalog tag
+        const isYML = xmlDoc.querySelector('yml_catalog') !== null;
+        
+        covers = isYML ? 
+            parseYMLFeed(xmlDoc, xmlIdTag.value, xmlImageTag.value) :
+            parseXMLFeed(xmlDoc, xmlIdTag.value, xmlImageTag.value);
       } else if (feedFormat === 'csv') {
         covers = parseCSVFeed(content, csvIdColumn.value, csvImageColumn.value);
       }
@@ -240,6 +242,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log(`Обработано ${covers.length} записей из CSV`);
     return covers;
+  }
+
+  function parseYMLFeed(xmlDoc, idTag, imageTag) {
+    const covers = [];
+    const offers = xmlDoc.querySelector('shop offers')?.getElementsByTagName('offer') || [];
+
+    for (let offer of offers) {
+        const id = offer.getAttribute('id');
+        const pictureNodes = offer.getElementsByTagName('picture') || 
+                           offer.getElementsByTagName(imageTag);
+        const src = getImageLink(Array.from(pictureNodes), aspectRatio);
+        
+        if (id && src) {
+            const timestamp = extractTimestamp(src);
+            covers.push({ 
+                id, 
+                title: id, 
+                src, 
+                pictureNodes: Array.from(pictureNodes), 
+                isDefective: false,
+                timestamp: timestamp
+            });
+        }
+    }
+
+    return sortCovers(covers);
   }
 
   document.getElementById('get-defective').addEventListener('click', () => {
