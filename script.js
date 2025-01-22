@@ -120,17 +120,38 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function getImageLink(pictureNodes, format) {
-    for (let node of pictureNodes) {
+    const formatMap = {
+        '1:1': ['_0.', '.png', '/11.', '/169.'], // Добавлены паттерны для 1:1
+        '3:4': ['_34.', '/34.'],
+        '16:5': ['_165.', '/165.']
+    };
+
+    // Фильтруем изображения по домену
+    const validNodes = Array.from(pictureNodes).filter(node => {
+        const src = node.textContent.toLowerCase();
+        return src.includes('fabrikont.ru'); // Проверка домена
+    });
+
+    // Если формат 1:1 и нет специфичных паттернов - выбираем первое изображение
+    if (format === '1:1' && validNodes.length > 0) {
+        const defaultImage = validNodes.find(node => 
+            !node.textContent.match(/_\d+\./) && 
+            !node.textContent.match(/\/\d+\./)
+        );
+        if (defaultImage) return defaultImage.textContent;
+    }
+
+    // Ищем изображение, соответствующее формату
+    for (let node of validNodes) {
         const src = node.textContent;
-        if (format === '3:4' && src.includes('_34.jpg')) {
+        const patterns = formatMap[format] || [];
+        
+        if (patterns.some(pattern => src.includes(pattern))) {
             return src;
-        } else if (format === '16:5' && src.includes('_165.jpg')) {
-            return src;
-        } else if (format === '1:1' && src.includes('fabrikont.ru')) {
-            return src; // Логика по умолчанию для 1:1
         }
     }
-    return ''; // Если подходящее изображение не найдено
+
+    return validNodes[0]?.textContent || ''; // Возвращаем первое изображение с доменом
   }
 
   function extractTimestamp(url) {
@@ -175,28 +196,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function parseXMLFeed(xmlDoc, idTag, imageTag) {
     const covers = [];
-    const offers = xmlDoc.getElementsByTagName(idTag);
-
+    const offers = xmlDoc.getElementsByTagName('offer');
+  
     for (let offer of offers) {
-        const id = offer.getAttribute('id');
-        const pictureNodes = offer.getElementsByTagName(imageTag);
-        const src = getImageLink(pictureNodes, aspectRatio);
-        
-        if (id && src) {
-            const timestamp = extractTimestamp(src);
-            covers.push({ 
-                id, 
-                title: id, 
-                src, 
-                pictureNodes, 
-                isDefective: false,
-                timestamp: timestamp
-            });
-        }
+      const id = offer.getAttribute('id');
+  
+      // Сначала пробуем получить элементы по пользовательскому тегу:
+      let pictureNodes = offer.getElementsByTagName(imageTag);
+      
+      // Если пусто — переходим к poster:
+      if (!pictureNodes.length) {
+        pictureNodes = offer.getElementsByTagName('poster');
+      }
+      // Если всё ещё пусто — к picture:
+      if (!pictureNodes.length) {
+        pictureNodes = offer.getElementsByTagName('picture');
+      }
+  
+      const src = getImageLink(pictureNodes, aspectRatio);
+  
+      if (id && src) {
+        const timestamp = extractTimestamp(src);
+        covers.push({ 
+          id, 
+          title: id, 
+          src, 
+          pictureNodes, 
+          isDefective: false,
+          timestamp: timestamp
+        });
+      }
     }
-
+  
     return sortCovers(covers);
-  }
+  }  
 
   function sortCovers(covers) {
     const sortDirection = document.getElementById('sort-direction').value;
@@ -247,28 +280,35 @@ document.addEventListener('DOMContentLoaded', () => {
   function parseYMLFeed(xmlDoc, idTag, imageTag) {
     const covers = [];
     const offers = xmlDoc.querySelector('shop offers')?.getElementsByTagName('offer') || [];
-
+  
     for (let offer of offers) {
-        const id = offer.getAttribute('id');
-        const pictureNodes = offer.getElementsByTagName('picture') || 
-                           offer.getElementsByTagName(imageTag);
-        const src = getImageLink(Array.from(pictureNodes), aspectRatio);
-        
-        if (id && src) {
-            const timestamp = extractTimestamp(src);
-            covers.push({ 
-                id, 
-                title: id, 
-                src, 
-                pictureNodes: Array.from(pictureNodes), 
-                isDefective: false,
-                timestamp: timestamp
-            });
-        }
+      const id = offer.getAttribute('id');
+  
+      let pictureNodes = offer.getElementsByTagName(imageTag);
+      if (!pictureNodes.length) {
+        pictureNodes = offer.getElementsByTagName('poster');
+      }
+      if (!pictureNodes.length) {
+        pictureNodes = offer.getElementsByTagName('picture');
+      }
+  
+      const src = getImageLink(Array.from(pictureNodes), aspectRatio);
+  
+      if (id && src) {
+        const timestamp = extractTimestamp(src);
+        covers.push({ 
+          id, 
+          title: id, 
+          src, 
+          pictureNodes: Array.from(pictureNodes), 
+          isDefective: false,
+          timestamp: timestamp
+        });
+      }
     }
-
+  
     return sortCovers(covers);
-  }
+  }  
 
   document.getElementById('get-defective').addEventListener('click', () => {
     const defectiveIds = covers.filter(cover => cover.isDefective).map(cover => cover.id);
@@ -397,6 +437,35 @@ document.addEventListener('DOMContentLoaded', () => {
     covers = sortCovers(covers);
     displayThumbnails(covers);
   });
+
+  function handleFeedUpload(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const xmlString = e.target.result;
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+        
+        // Get the tag names from input fields
+        const idTag = document.getElementById('xml-id-tag').value || 'id';
+        const imageTag = document.getElementById('xml-image-tag').value || 'picture';
+        
+        const offers = xmlDoc.querySelectorAll('offer');
+        offers.forEach(offer => {
+            const id = offer.getAttribute('id') || offer.querySelector(idTag)?.textContent;
+            const imageUrl = offer.querySelector(imageTag)?.textContent;
+            
+            if (id && imageUrl) {
+                createThumbnail(id, imageUrl);
+            }
+        });
+        
+        updateBannerCount();
+    };
+    
+    reader.readAsText(file);
+  }
 
 });
 
