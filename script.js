@@ -248,34 +248,55 @@ document.addEventListener('DOMContentLoaded', () => {
   function parseCSVFeed(csvString, idColumn, imageColumn) {
     const covers = [];
     const lines = csvString.split('\n');
-    const headers = lines[0].toLowerCase().split(',');
     
-    const idIndex = headers.indexOf(idColumn.toLowerCase());
-    const srcIndex = headers.indexOf(imageColumn.toLowerCase());
-    const titleIndex = headers.indexOf('id cruise'); // Предполагаем, что 'ID Cruise' - это название столбца с заголовком
-
+    // Берём первую строку как «шапку» CSV и сразу разбиваем по запятым
+    const headers = lines[0].split(',');
+  
+    // Пользователь обязан указать теги (имена колонок) ровно так, как в CSV
+    const idIndex = headers.indexOf(idColumn);
+    const srcIndex = headers.indexOf(imageColumn);
+  
+    // Если хотите анализировать какие-то другие колонки (например, "ID Cruise"),
+    // то тоже ищите их по точному совпадению без toLowerCase():
+    const titleIndex = headers.indexOf('ID Cruise');
+  
+    // Если индексы не найдены - выводим ошибку и завершаем
     if (idIndex === -1 || srcIndex === -1) {
-      console.error('Не удалось найти указанные столбцы ID или Image URL');
+      console.error(`Не удалось найти указанные столбцы: "${idColumn}" или "${imageColumn}"`);
       return covers;
     }
-
+  
+    // Идём по строкам со 2-й (i=1) до конца
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-      
+  
+      // Разбиваем строку по запятым
       const cells = line.split(',');
-      const id = cells[idIndex];
-      const src = cells[srcIndex];
-      const title = titleIndex !== -1 ? cells[titleIndex] : id; // Используем ID как заголовок, если столбец Title не найден
-
+  
+      const id    = cells[idIndex];
+      const src   = cells[srcIndex];
+  
+      // Если столбец 'ID Cruise' в шапке есть, то берём его как title,
+      // иначе пусть title = id (заглушка).
+      let title = id;
+      if (titleIndex !== -1) {
+        title = cells[titleIndex] || id;
+      }
+  
       if (id && src) {
-        covers.push({ id, title, src, isDefective: false });
+        covers.push({
+          id,
+          title,
+          src,
+          isDefective: false
+        });
       }
     }
-
+  
     console.log(`Обработано ${covers.length} записей из CSV`);
     return covers;
-  }
+  }  
 
   function parseYMLFeed(xmlDoc, idTag, imageTag) {
     const covers = [];
