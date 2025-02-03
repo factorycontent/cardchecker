@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Фильтруем изображения по домену
     const validNodes = Array.from(pictureNodes).filter(node => {
         const src = node.textContent.toLowerCase();
-        return src.includes('fabrikont.ru'); // Проверка домена
+        return src.includes('fabrikont.ru') || src.includes('storage.yandexcloud.net'); // Проверка обоих доменов
     });
 
     // Если формат 1:1 и нет специфичных паттернов - выбираем первое изображение
