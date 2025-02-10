@@ -140,7 +140,6 @@ input[type="file"] {
 
 .thumbnail {
     animation: fadeIn 0.5s ease-in-out;
-    
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -152,7 +151,8 @@ input[type="file"] {
     overflow: hidden;
     transition: transform 0.3s, border-color 0.3s;
     cursor: pointer;
-    overflow: hidden;
+    position: relative;
+    padding-bottom: 40px;
 }
 
 .thumbnail:hover {
@@ -161,30 +161,40 @@ input[type="file"] {
 
 .thumbnail img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.thumbnail.aspect-1-1 img {
-    width: 360px;
-    height: 360px;
-}
-
-.thumbnail.aspect-3-4 img {
-    width: 270px;
-    height: 360px;
-}
-
-.thumbnail.aspect-16-5 img {
-    width: 480px;
-    height: 150px;
+    height: calc(100% - 40px);
+    object-fit: contain;
+    object-position: center;
 }
 
 .thumbnail label {
-    display: block;
+    position: absolute;
+    bottom: 5px;
+    left: 0;
+    right: 0;
     text-align: center;
-    margin: 10px;
+    margin: 5px;
     font-weight: bold;
+}
+
+/* Aspect ratio specific styles */
+.thumbnail.aspect-1-1 {
+    width: 360px;
+    height: 400px;
+}
+
+.thumbnail.aspect-3-4 {
+    width: 360px;
+    height: 520px;
+}
+
+.thumbnail.aspect-4-3 {
+    width: 360px;
+    height: 310px;
+}
+
+.thumbnail.aspect-16-5 {
+    width: 360px;
+    height: 152.5px;
 }
 
 .thumbnail.selected {
@@ -218,19 +228,12 @@ input[type="file"] {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    max-width: 1640px; /* 200px * 4 + 10px * 4 */
+    max-width: 1640px;
 }
 
 #thumbnails-container .thumbnail {
-    flex: 1 0 21%; /* 4 items per row, with space for margins */
-}
-
-#thumbnails-container .thumbnail:nth-child(4n) {
-    margin-right: 0;
-}
-
-#thumbnails-container .thumbnail:nth-child(4n+1) {
-    margin-left: 0;
+    flex: 1 0 21%;
+    box-sizing: border-box;
 }
 
 #folder-input,

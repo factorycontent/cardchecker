@@ -24,7 +24,7 @@
             <button class="tab-button active" data-tab="feed">Загрузка из фида</button>
             <button class="tab-button" data-tab="folder">Загрузка из папки</button>
         </div>
-        
+
         <div id="feed-input" class="tab-content active">
             <div class="feed-format">
                 <button class="format-button active" data-format="xml">XML</button>
@@ -44,7 +44,7 @@
                 Загружено баннеров: 0
             </div>
         </div>
-        
+
         <div id="folder-input" class="tab-content">
             <input type="file" id="folder-picker" webkitdirectory directory multiple>
         </div>
@@ -55,6 +55,7 @@
         <select id="aspect-ratio" name="aspect-ratio">
             <option value="1:1">1:1</option>
             <option value="3:4">3:4</option>
+            <option value="4:3">4:3</option>
             <option value="16:5">16:5</option>
         </select>
 
@@ -63,12 +64,12 @@
             <option value="desc">Сначала новые</option>
             <option value="asc">Сначала старые</option>
         </select>
-    </div>     
+    </div>
 
     <div id="thumbnails-container">
-        <!-- Здесь будут отображаться миниатюры -->
+        <!-- Thumbnails will be displayed here -->
     </div>
-    
+
     <button id="get-defective" class="action-button">Отметить как неудачные</button>
 
     <div id="overlay"></div>
