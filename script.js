@@ -326,10 +326,20 @@ function parseFolder(files, currentAspectRatio) {
   tabButtons.forEach(button => {
       button.addEventListener('click', () => {
           const tabName = button.getAttribute('data-tab');
+          
+          // Remove active class from all buttons and contents
           tabButtons.forEach(btn => btn.classList.remove('active'));
           tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Add active class to clicked button
           button.classList.add('active');
-          document.getElementById(`${tabName}-input`).classList.add('active');
+          
+          // Find and show the corresponding content
+          const activeContent = document.getElementById(`${tabName}-input`);
+          if (activeContent) {
+              activeContent.classList.add('active');
+              activeContent.style.display = 'block'; // Явно устанавливаем display: block
+          }
       });
   });
 
@@ -419,4 +429,10 @@ reader.readAsText(file);
   });
 
   document.getElementById('folder-input').style.display = 'none';
+
+  // Initialize tabs correctly
+  const folderInput = document.getElementById('folder-input');
+  if (folderInput) {
+      folderInput.style.display = 'none'; // Initially hidden
+  }
 });

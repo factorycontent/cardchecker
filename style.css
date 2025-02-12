@@ -252,6 +252,10 @@ input[type="file"] {
     font-size: 16px;
 }
 
+#folder-input {
+    margin: 20px;
+}
+
 #overlay {
     display: none;
     position: fixed;
@@ -326,4 +330,12 @@ input[type="file"] {
 
 .sort-label {
     margin-left: 20px;
+}
+
+#folder-input input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
